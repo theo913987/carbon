@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Leaf, CheckCircle } from 'lucide-react';
+import { Leaf, CheckCircle, Building2, User } from 'lucide-react';
 
 interface RegisterProps {
   onRegisterSuccess: () => void;
@@ -8,12 +8,15 @@ interface RegisterProps {
 }
 
 export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onGoToLogin }) => {
+  const [accountType, setAccountType] = useState<'ENTERPRISE' | 'PERSONAL'>('ENTERPRISE');
   const [formData, setFormData] = useState({
     username: '',
     phone: '',
     code: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    enterpriseName: '',
+    creditCode: ''
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -33,13 +36,20 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onGoToLog
 
   const handleSendCode = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Relaxed logic: Always send code
     setCountdown(60);
     alert('验证码已发送: 1234 (任意输入即可通过)');
   };
 
   const handleRegister = () => {
-    // Relaxed logic: Allow any input
+    if (!formData.username || !formData.phone || !formData.password) {
+        alert('请填写必填信息');
+        return;
+    }
+    if (accountType === 'ENTERPRISE' && !formData.enterpriseName) {
+        alert('请填写企业名称');
+        return;
+    }
+
     setIsLoading(true);
     
     // Simulate API call
@@ -53,11 +63,6 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onGoToLog
       }, 1500);
     }, 1000);
   };
-
-  // Always enable button for "any input" requirement, 
-  // but logically at least some typing feels better. 
-  // Per request "regardless of what I input", we keep it enabled or check minimal length visually but allow click.
-  const isValid = true; 
 
   return (
     <div className="min-h-screen bg-[#edf9fc] relative flex flex-col font-sans">
@@ -76,7 +81,7 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onGoToLog
 
       {/* Main Content - Centered */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <div className="bg-white w-[520px] min-h-[450px] px-[35px] py-[35px] rounded-none shadow-sm flex flex-col mt-[-50px] relative overflow-hidden transition-all">
+        <div className="bg-white w-[520px] min-h-[580px] px-[35px] py-[30px] rounded-none shadow-sm flex flex-col mt-[-20px] relative overflow-hidden transition-all">
             
             {showSuccess ? (
                 <div className="flex-1 flex flex-col items-center justify-center animate-in zoom-in-95 duration-300">
@@ -88,76 +93,120 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onGoToLog
                 </div>
             ) : (
                 <>
-                    {/* Username */}
-                    <div className="bg-[#E5F9F0] h-[50px] flex items-center mt-0">
-                        <label className="w-[85px] text-[#172B4D] font-medium text-[16px] tracking-[1px] pl-[16px] whitespace-nowrap">用 户 名</label>
-                        <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
-                        <input 
-                            type="text" 
-                            placeholder="请输入用户名" 
-                            className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[15px] h-full"
-                            value={formData.username}
-                            onChange={(e) => setFormData({...formData, username: e.target.value})}
-                        />
-                    </div>
-
-                    {/* Phone */}
-                    <div className="bg-[#E5F9F0] h-[50px] flex items-center mt-[32px]">
-                        <label className="w-[85px] text-[#172B4D] font-medium text-[16px] tracking-[1px] pl-[16px] whitespace-nowrap">手 机 号</label>
-                        <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
-                        <input 
-                            type="text" 
-                            placeholder="请输入手机号" 
-                            className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[15px] h-full"
-                            value={formData.phone}
-                            onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        />
-                    </div>
-
-                    {/* Verification Code */}
-                    <div className="bg-[#E5F9F0] h-[50px] flex items-center mt-[32px]">
-                        <label className="w-[85px] text-[#172B4D] font-medium text-[16px] tracking-[1px] pl-[16px] whitespace-nowrap">验 证 码</label>
-                        <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
-                        <input 
-                            type="text" 
-                            placeholder="请输入验证码" 
-                            className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[15px] h-full"
-                            value={formData.code}
-                            onChange={(e) => setFormData({...formData, code: e.target.value})}
-                        />
-                        <button 
-                            onClick={handleSendCode}
-                            disabled={countdown > 0}
-                            className="bg-[#E5F9F0] text-[#0065FF] text-[15px] font-normal mr-[16px] disabled:text-slate-400 whitespace-nowrap"
+                    {/* Account Type Tabs */}
+                    <div className="flex border-b border-slate-100 mb-8">
+                        <button
+                          onClick={() => setAccountType('ENTERPRISE')}
+                          className={`flex-1 py-3 text-center font-medium text-[15px] flex items-center justify-center gap-2 transition-colors relative ${accountType === 'ENTERPRISE' ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
                         >
-                            {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                           <Building2 size={18} /> 企业注册
+                           {accountType === 'ENTERPRISE' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600"></div>}
+                        </button>
+                        <button
+                          onClick={() => setAccountType('PERSONAL')}
+                          className={`flex-1 py-3 text-center font-medium text-[15px] flex items-center justify-center gap-2 transition-colors relative ${accountType === 'PERSONAL' ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'}`}
+                        >
+                           <User size={18} /> 个人注册
+                           {accountType === 'PERSONAL' && <div className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-600"></div>}
                         </button>
                     </div>
 
-                    {/* Password */}
-                    <div className="bg-[#E5F9F0] h-[50px] flex items-center mt-[32px]">
-                        <label className="w-[85px] text-[#172B4D] font-medium text-[16px] tracking-[1px] pl-[16px] whitespace-nowrap">设置密码</label>
-                        <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
-                        <input 
-                            type="password" 
-                            placeholder="请输入密码" 
-                            className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[15px] h-full"
-                            value={formData.password}
-                            onChange={(e) => setFormData({...formData, password: e.target.value})}
-                        />
-                    </div>
+                    <div className="space-y-[20px]">
+                        {/* Enterprise Fields */}
+                        {accountType === 'ENTERPRISE' && (
+                            <>
+                                <div className="bg-[#E5F9F0] h-[50px] flex items-center group focus-within:ring-1 focus-within:ring-emerald-500 transition-all rounded-sm">
+                                    <label className="w-[85px] text-[#172B4D] font-medium text-[15px] tracking-[1px] pl-[16px] whitespace-nowrap">企业名称</label>
+                                    <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
+                                    <input 
+                                        type="text" 
+                                        placeholder="请输入企业全称" 
+                                        className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[14px] h-full"
+                                        value={formData.enterpriseName}
+                                        onChange={(e) => setFormData({...formData, enterpriseName: e.target.value})}
+                                    />
+                                </div>
+                                <div className="bg-[#E5F9F0] h-[50px] flex items-center group focus-within:ring-1 focus-within:ring-emerald-500 transition-all rounded-sm">
+                                    <label className="w-[85px] text-[#172B4D] font-medium text-[15px] tracking-[1px] pl-[16px] whitespace-nowrap">信用代码</label>
+                                    <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
+                                    <input 
+                                        type="text" 
+                                        placeholder="统一社会信用代码 (选填)" 
+                                        className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[14px] h-full"
+                                        value={formData.creditCode}
+                                        onChange={(e) => setFormData({...formData, creditCode: e.target.value})}
+                                    />
+                                </div>
+                            </>
+                        )}
 
-                    {/* Confirm Password */}
-                    <div className="bg-[#E5F9F0] h-[50px] flex items-center mt-[32px]">
-                        <label className="w-[85px] text-[#172B4D] font-medium text-[16px] tracking-[1px] pl-[16px] whitespace-nowrap">确认密码</label>
-                        <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
-                        <input 
-                            type="password" 
-                            placeholder="请输入确认密码" 
-                            className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[15px] h-full"
-                            value={formData.confirmPassword}
-                            onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
-                        />
+                        {/* Common Fields */}
+                        <div className="bg-[#E5F9F0] h-[50px] flex items-center group focus-within:ring-1 focus-within:ring-emerald-500 transition-all rounded-sm">
+                            <label className="w-[85px] text-[#172B4D] font-medium text-[15px] tracking-[1px] pl-[16px] whitespace-nowrap">用 户 名</label>
+                            <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
+                            <input 
+                                type="text" 
+                                placeholder="设置登录用户名" 
+                                className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[14px] h-full"
+                                value={formData.username}
+                                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                            />
+                        </div>
+
+                        <div className="bg-[#E5F9F0] h-[50px] flex items-center group focus-within:ring-1 focus-within:ring-emerald-500 transition-all rounded-sm">
+                            <label className="w-[85px] text-[#172B4D] font-medium text-[15px] tracking-[1px] pl-[16px] whitespace-nowrap">手 机 号</label>
+                            <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
+                            <input 
+                                type="text" 
+                                placeholder="请输入手机号" 
+                                className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[14px] h-full"
+                                value={formData.phone}
+                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                            />
+                        </div>
+
+                        <div className="bg-[#E5F9F0] h-[50px] flex items-center group focus-within:ring-1 focus-within:ring-emerald-500 transition-all rounded-sm">
+                            <label className="w-[85px] text-[#172B4D] font-medium text-[15px] tracking-[1px] pl-[16px] whitespace-nowrap">验 证 码</label>
+                            <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
+                            <input 
+                                type="text" 
+                                placeholder="请输入验证码" 
+                                className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[14px] h-full"
+                                value={formData.code}
+                                onChange={(e) => setFormData({...formData, code: e.target.value})}
+                            />
+                            <button 
+                                onClick={handleSendCode}
+                                disabled={countdown > 0}
+                                className="bg-[#E5F9F0] text-[#0065FF] text-[14px] font-normal mr-[16px] disabled:text-slate-400 whitespace-nowrap hover:underline"
+                            >
+                                {countdown > 0 ? `${countdown}s` : '获取验证码'}
+                            </button>
+                        </div>
+
+                        <div className="bg-[#E5F9F0] h-[50px] flex items-center group focus-within:ring-1 focus-within:ring-emerald-500 transition-all rounded-sm">
+                            <label className="w-[85px] text-[#172B4D] font-medium text-[15px] tracking-[1px] pl-[16px] whitespace-nowrap">设置密码</label>
+                            <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
+                            <input 
+                                type="password" 
+                                placeholder="请输入密码" 
+                                className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[14px] h-full"
+                                value={formData.password}
+                                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                            />
+                        </div>
+
+                        <div className="bg-[#E5F9F0] h-[50px] flex items-center group focus-within:ring-1 focus-within:ring-emerald-500 transition-all rounded-sm">
+                            <label className="w-[85px] text-[#172B4D] font-medium text-[15px] tracking-[1px] pl-[16px] whitespace-nowrap">确认密码</label>
+                            <div className="w-[1px] h-[16px] bg-[#b3bac5] mx-[9px]"></div>
+                            <input 
+                                type="password" 
+                                placeholder="请输入确认密码" 
+                                className="flex-1 bg-transparent border-none outline-none text-[#172B4D] placeholder:text-[#68b0fe] text-[14px] h-full"
+                                value={formData.confirmPassword}
+                                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                            />
+                        </div>
                     </div>
 
                     {/* Register Button */}
@@ -165,9 +214,14 @@ export const Register: React.FC<RegisterProps> = ({ onRegisterSuccess, onGoToLog
                         <button 
                             onClick={handleRegister}
                             disabled={isLoading}
-                            className={`w-full h-[50px] text-white text-[18px] font-medium transition-colors rounded-[2px] bg-[#27A777] hover:bg-[#30b08f]`}
+                            className={`w-full h-[50px] text-white text-[18px] font-medium transition-colors rounded-[2px] bg-[#27A777] hover:bg-[#30b08f] flex items-center justify-center`}
                         >
-                            {isLoading ? '注册中...' : '注册'}
+                            {isLoading ? (
+                               <>
+                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                 注册中...
+                               </>
+                            ) : `注册${accountType === 'ENTERPRISE' ? '企业' : '个人'}账户`}
                         </button>
                     </div>
 
